@@ -13,28 +13,56 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(username: string, password: string): Promise<TokenData> {
+  async login(username: string, password: string): Promise<{status: number, message: string, data?: TokenData}> {
     const user = await this.prisma.user.findUnique({
       where: {
         username: username,
       },
     });
-
+  
     if (user && bcrypt.compareSync(password, user.password)) {
       return {
-        token:
-          'Bearer ' +
-          this.jwtService.sign({
-            id: user.id,
-            username: user.username,
-          }),
-
+        status: 200,
+        message: 'Login berhasil',
+        data: {
+          token:
+            'Bearer ' +
+            this.jwtService.sign({
+              id: user.id,
+              username: user.username,
+            }),
+        },
+      };
+    } else {
+      return {
+        status: 401,
+        message: 'Username atau password salah',
       };
     }
-    throw new Error('Invalid username or password');
   }
+  
 
   async register(userData: RegistrationDataDTO) {
+    // check if email or username already exist
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { username: userData.username },
+          { email: userData.email }
+        ]
+      }
+    });
+  
+    if (existingUser) {
+      return {
+        status: 400,
+        message: existingUser.username === userData.username
+          ? 'Username sudah pernah digunakan' 
+          : 'Email sudah pernah digunakan',
+      };
+    }
+
+    // create new user
     const user = await this.prisma.user.create({
       data: {
         username: userData.username,
@@ -42,10 +70,20 @@ export class AuthService {
         email: userData.email,
       },
     });
-    return { status: `Berhasil Membuat akun dengan username ${user.username}`};
+    return {
+      status: 201,
+      message: `Berhasil membuat akun dengan username ${user.username}`,
+    };
   }
+  
 
   async getUserDetails(token: string){
+    if(token=="notvalid"){
+      return {
+        status: 401,
+        message: "User not authorized"
+      };
+    }
     const decodedToken = await this.jwtService.verifyAsync(token);
     const isTokenBlacklisted = await this.prisma.tokenBlacklist.findUnique({
       where: {
@@ -54,8 +92,12 @@ export class AuthService {
     });
 
     if (isTokenBlacklisted) {
-      return {status: "Token tidak valid"};
+      return {
+        status: 401,
+        message: "Token tidak valid"
+      };
     }
+    
     const user = await this.prisma.user.findUnique({
       where: {
         id: decodedToken.id,
@@ -64,13 +106,14 @@ export class AuthService {
   
     if (user) {
       return {
-        id: user.id,
-        username: user.username,
-        email: user.email,
+        status: 200,
+        data: { 
+          id: user.id,
+          username: user.username,
+          email: user.email
+        }
       };
-    } else {
-      throw new Error('User not found');
-    }
+    } 
   }
   async logout (token: string){
     await this.prisma.tokenBlacklist.create({
@@ -78,7 +121,10 @@ export class AuthService {
         token: token,
       },
     });
-    return { status: "Berhasil Logout"};
+    return { 
+      status: 200 ,
+      message: "Berhasil Logout"
+    };
   }
   
 }

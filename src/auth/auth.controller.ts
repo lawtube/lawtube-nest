@@ -9,7 +9,7 @@ export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
     @Get('user')
-    async getUserDetails(@AuthToken() token: string): Promise<Partial<User>> {
+    async getUserDetails(@AuthToken() token: string) {
         return this.authService.getUserDetails(token);
     }
 
@@ -40,23 +40,19 @@ export class AuthController {
     @Post('login')
     async login(@Res({ passthrough: true }) response: any, @Body() body: any) {
         try {
-        const tokenData = await this.authService.login(
-            body.username,
-            body.password,
-        );
-        response.cookie('token', tokenData.token, {
-            maxAge: 900000 * 16,
-            httpOnly: false,
-        });
-        return tokenData;
+            const tokenData = await this.authService.login(
+                body.username,
+                body.password,
+            );
+            return tokenData;
         } catch (e: any) {
-        throw new HttpException(
-            {
-            status: HttpStatus.FORBIDDEN,
-            error: e.message,
-            },
-            HttpStatus.FORBIDDEN,
-        );
+            throw new HttpException(
+                {
+                status: HttpStatus.FORBIDDEN,
+                error: e.message,
+                },
+                HttpStatus.FORBIDDEN,
+            );
         }
     }
 }
