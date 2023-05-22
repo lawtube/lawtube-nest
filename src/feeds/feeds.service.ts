@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { WebSocketServer } from '@nestjs/websockets';
+import { Server } from 'socket.io';
+import { WSGateway } from 'src/websocket/websocket.gateway';
 
 @Injectable()
 export class FeedsService {
-    constructor(private readonly prisma: PrismaClient) { }
+    constructor(private readonly prisma: PrismaClient, private readonly wsGateway: WSGateway) { }
     
     async create(postData: any) {
         const post = await this.prisma.feeds.create({
@@ -113,7 +116,7 @@ export class FeedsService {
                 doHighlight : postData.doHighlight,
                 doSubtitle : postData.doSubtitle,
                 status : postData.status,
-                videolink : null,
+                videolink : postData.videolink,
                 sublink : null,
                 issafe : null,
                 user: {
@@ -143,6 +146,10 @@ export class FeedsService {
                 issafe : updateData.issafe,
             }
         })
+
+        const userid = update.userId
+        this.wsGateway.sendProgressUpdate(userid)
+
         return update
     }
 }
