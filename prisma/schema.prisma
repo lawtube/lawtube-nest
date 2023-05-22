@@ -15,9 +15,59 @@ model User {
   username    String        @unique
   password    String
   email       String        @unique
+  feeds       Feeds[]
+  comments    Comment[]
+  likes       Like[]
+  progress    WorkProgress[]
+}
+
+model WorkProgress {
+  id          String        @id @default(uuid())
+  token       String        @unique
+  judul       String
+  visibility  String
+  doHighlight Boolean
+  doSubtitle  Boolean
+  status      String
+  user        User          @relation(fields: [userId], references: [id])
+  userId      String
+  videolink   String?
+  sublink     String?
+  issafe      Boolean?
 }
 
 model TokenBlacklist {
   id          String        @id @default(uuid())
   token       String        @unique
+}
+
+model Feeds {
+  id          String        @id @default(uuid())
+  title       String
+  videolink   String?
+  sublink     String?
+  issafe      Boolean?
+  user        User          @relation(fields: [userId], references: [id])
+  userId      String
+  comments    Comment[]
+  likes       Like[]
+}
+
+model Like {
+  id          String        @id @default(uuid())
+  feeds       Feeds         @relation(fields: [feedsId], references: [id])
+  feedsId     String
+  user        User          @relation(fields: [userId], references: [id])
+  userId      String
+
+  @@unique([feedsId, userId])
+}
+
+model Comment {
+  id          String        @id @default(uuid())
+  content     String
+  feeds       Feeds         @relation(fields: [feedsId], references: [id])
+  feedsId     String
+  user        User          @relation(fields: [userId], references: [id])
+  userId      String
 }

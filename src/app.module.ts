@@ -6,11 +6,13 @@ import { AuthService } from './auth/auth.service';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
+import { FeedsModule } from './feeds/feeds.module';
 
 @Module({
   imports: [
     AuthModule,
     JwtModule.register({ secret: process.env.JWT_SECRET }),
+    FeedsModule,
   ],
   providers: [PrismaClient]
 })
