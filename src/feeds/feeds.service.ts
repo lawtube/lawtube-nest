@@ -27,7 +27,11 @@ export class FeedsService {
             include: {
                 user: true,
                 likes: true,
-                comments: true,
+                comments: {
+                    include: {
+                        user: true
+                    }
+                }
             }
         }).then(item => {
             return item.map(feeds => ({
@@ -123,15 +127,22 @@ export class FeedsService {
                 }
             }
         })
-        return post
+        return {
+            status: 201,
+            message: "Berhasil menambahkan ke work progress"
+        }
     }
 
     getUserProgress(id: string) {
-        return this.prisma.workProgress.findMany({
+        const progress = this.prisma.workProgress.findMany({
             where: {
                 userId: id
             }
         })
+        return {
+            status: 200,
+            data: progress
+        }
     }
     async updateProgress(updateData: any) {
         const update = await this.prisma.workProgress.update({
@@ -143,6 +154,23 @@ export class FeedsService {
                 issafe : updateData.issafe,
             }
         })
-        return update
+
+        if(update.status === "finish moderation"){
+            const sublink = update.doSubtitle ? update.sublink : null
+            const postData = {
+                title : update.judul,
+                videolink : update.videolink,
+                sublink : sublink,
+                issafe : update.issafe,
+                userId : update.userId
+            }
+
+            this.create(postData)
+        }
+
+        return {
+            status: 200,
+            message: "Berhasil update work progress"
+        }
     }
 }

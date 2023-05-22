@@ -75,7 +75,26 @@ export class FeedsController {
     getFeedsLiked(@Param('feedsId') feedsId: string, @Param('userId') userId: string) {
         return this.feedsService.getFeedsLiked(feedsId,userId);
     }
-    
+
+    @Post('createComment')
+    async createComment(@Body() body: any) {
+        try {
+            return await this.feedsService.createComment(body)
+        } catch (e: any) {
+            if (e instanceof PrismaClientKnownRequestError) {
+                throw new HttpException({
+                    status: HttpStatus.BAD_REQUEST,
+                    error: "Invalid post payload"
+                }, HttpStatus.BAD_REQUEST)
+            } else {
+                throw new HttpException({
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                    error: "An error occurred while comment"
+
+                }, HttpStatus.INTERNAL_SERVER_ERROR)
+            }
+        }
+    }    
 
     @Post('createProgress')
     async createProgress(@Body() body: any) {
