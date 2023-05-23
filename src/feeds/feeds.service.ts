@@ -148,7 +148,7 @@ export class FeedsService {
         })
 
         const userid = update.userId
-        this.wsGateway.sendProgressUpdate(userid)
+        this.wsGateway.sendProgressUpdate(null, userid)
 
         return update
     }
