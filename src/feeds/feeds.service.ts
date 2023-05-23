@@ -136,12 +136,13 @@ export class FeedsService {
         }
     }
 
-    getUserProgress(id: string) {
-        const progress = this.prisma.workProgress.findMany({
+    async getUserProgress(id: string) {
+        const progress = await this.prisma.workProgress.findMany({
             where: {
                 userId: id
             }
         })
+        console.log(progress)
         return {
             status: 200,
             data: progress
